@@ -26,6 +26,12 @@ if response.status_code != 200:
 
 grafana_data = response.json()  # Assume this returns a list of dashboards
 
+if not grafana_data:
+    raise Exception("Grafana API returned no data.")
+
+# Extract all keys from the first dashboard entry (assuming all entries have the same structure)
+keys = grafana_data[0].keys()
+
 # Authenticate with Google Sheets
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
 credentials = Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=SCOPES)
@@ -37,8 +43,8 @@ sheet = gc.open_by_key(SPREADSHEET_ID).sheet1
 # Clear existing content
 sheet.clear()
 
-# Add headers
-sheet.append_row(["Title", "UID"])  # Modify as per your Grafana data structure
+# Add headers dynamically based on keys from the Grafana data
+sheet.append_row(list(keys))
 
 # Function to append rows with exponential backoff
 def exponential_backoff_request(sheet, data, retries=5):
@@ -56,7 +62,7 @@ def exponential_backoff_request(sheet, data, retries=5):
                 raise e  # Raise other errors
 
 # Prepare Grafana data for batch insertion
-rows = [[dashboard["title"], dashboard["uid"]] for dashboard in grafana_data]
+rows = [[dashboard.get(key, "") for key in keys] for dashboard in grafana_data]
 
 # Append Grafana data in batches
 exponential_backoff_request(sheet, rows)
