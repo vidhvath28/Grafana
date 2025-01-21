@@ -24,7 +24,7 @@ ce_client = boto3.client(
     region_name=AWS_DEFAULT_REGION,
 )
 
-# Query AWS Cost Explorer
+# Query AWS Cost Explorer (Detailed data by service)
 def get_aws_costs():
     response = ce_client.get_cost_and_usage(
         TimePeriod={
@@ -33,6 +33,9 @@ def get_aws_costs():
         },
         Granularity="DAILY",
         Metrics=["UnblendedCost"],
+        GroupBy=[
+            {"Type": "DIMENSION", "Key": "SERVICE"},
+        ],
     )
     return response.get("ResultsByTime", [])
 
@@ -45,20 +48,22 @@ def write_to_google_sheets(data):
     sheet = client.open_by_key(SPREADSHEET_ID).sheet1
 
     # Write header row
-    sheet.append_row(["Date", "Cost (USD)"])
+    sheet.append_row(["Date", "Service", "Cost (USD)"])
 
     # Write cost data
     for item in data:
         date = item["TimePeriod"]["Start"]
-        cost = item["Total"]["UnblendedCost"]["Amount"]
-        sheet.append_row([date, cost])
+        for group in item["Groups"]:
+            service = group["Keys"][0]
+            cost = group["Metrics"]["UnblendedCost"]["Amount"]
+            sheet.append_row([date, service, cost])
 
 # Main Function
 if __name__ == "__main__":
-    print("Fetching AWS costs...")
+    print("Fetching AWS costs (detailed by service)...")
     cost_data = get_aws_costs()
 
-    print("Writing data to Google Sheets...")
+    print("Writing detailed data to Google Sheets...")
     write_to_google_sheets(cost_data)
 
     print("Data transfer complete!")
