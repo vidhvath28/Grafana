@@ -26,23 +26,22 @@ ce_client = boto3.client(
     region_name=AWS_DEFAULT_REGION,
 )
 
-# Calculate date range for the previous 7 days
-def get_date_range():
-    today = datetime.today()
-    end_date = today.strftime("%Y-%m-%d")  # current date
-    start_date = (today - timedelta(days=7)).strftime("%Y-%m-%d")  # 7 days ago
-    return start_date, end_date
+# Calculate date range for the last 7 days
+today = datetime.utcnow()
+start_date = today - timedelta(days=7)
+start_date_str = start_date.strftime("%Y-%m-%d")
+end_date_str = today.strftime("%Y-%m-%d")
 
-# Query AWS Cost Explorer (Detailed data by service)
-def get_aws_costs(start_date, end_date):
+# Query AWS Cost Explorer (Detailed data by linked account)
+def get_aws_costs():
     response = ce_client.get_cost_and_usage(
         TimePeriod={
-            "Start": start_date,
-            "End": end_date,
+            "Start": start_date_str,  # Date range (previous 7 days)
+            "End": end_date_str,
         },
         Granularity="DAILY",
         Metrics=["UnblendedCost"],
-        GroupBy=[{"Type": "DIMENSION", "Key": "SERVICE"}],
+        GroupBy=[{"Type": "DIMENSION", "Key": "LINKED_ACCOUNT"}],
     )
     return response.get("ResultsByTime", [])
 
@@ -54,17 +53,17 @@ def write_to_google_sheets(data):
     client = gspread.authorize(creds)
     sheet = client.open_by_key(SPREADSHEET_ID).sheet1
 
-    # Clear the existing data in the sheet (but keep the header)
+    # Clear previous data (except for the header)
     sheet.clear()
-    
+
     # Prepare the rows
-    rows = [["Date", "Service", "Cost (USD)"]]  # header row
+    rows = [["Date", "Account", "Cost (USD)"]]
     for item in data:
         date = item["TimePeriod"]["Start"]
         for group in item["Groups"]:
-            service = group["Keys"][0]
+            account = group["Keys"][0]  # Linked Account
             cost = group["Metrics"]["UnblendedCost"]["Amount"]
-            rows.append([date, service, cost])
+            rows.append([date, account, cost])
 
     # Write all rows at once
     sheet.append_rows(rows)
@@ -74,12 +73,8 @@ def write_to_google_sheets(data):
 
 # Main Function
 if __name__ == "__main__":
-    # Get date range for the last 7 days
-    start_date, end_date = get_date_range()
-    print(f"Fetching AWS costs from {start_date} to {end_date}...")
-
-    # Fetch cost data from AWS
-    cost_data = get_aws_costs(start_date, end_date)
+    print(f"Fetching AWS costs (detailed by account) for the period {start_date_str} to {end_date_str}...")
+    cost_data = get_aws_costs()
 
     print("Writing detailed data to Google Sheets...")
     write_to_google_sheets(cost_data)
