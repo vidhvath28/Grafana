@@ -3,6 +3,9 @@ import csv
 from datetime import datetime, timedelta
 import boto3
 from dotenv import load_dotenv
+from google.oauth2 import service_account
+from googleapiclient.discovery import build
+from googleapiclient.http import MediaFileUpload
 
 # Load environment variables
 load_dotenv()
@@ -11,6 +14,10 @@ load_dotenv()
 AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
 AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
 AWS_DEFAULT_REGION = os.getenv("AWS_DEFAULT_REGION")
+
+# Google Drive credentials
+SERVICE_ACCOUNT_FILE = os.getenv("SERVICE_ACCOUNT_FILE")
+GOOGLE_DRIVE_FOLDER_ID = os.getenv("GOOGLE_DRIVE_FOLDER_ID")
 
 # Initialize AWS Boto3 Client (e.g., Cost Explorer)
 ce_client = boto3.client(
@@ -34,7 +41,7 @@ def get_aws_cost_per_service():
     )
     return response.get("ResultsByTime", [])
 
-# Write data to CSV file
+# Write data to a CSV file locally (before uploading to Google Drive)
 def write_to_csv(data):
     today = datetime.utcnow()
     year = today.strftime("%Y")
@@ -59,7 +66,32 @@ def write_to_csv(data):
                 cost = group["Metrics"]["UnblendedCost"]["Amount"]
                 writer.writerow([date, service, cost])
 
-    print(f"CSV file saved to {os.path.abspath(file_path)}")
+    return file_path
+
+# Upload CSV to Google Drive
+def upload_to_google_drive(file_path):
+    # Authenticate with Google Drive using the service account
+    credentials = service_account.Credentials.from_service_account_file(
+        SERVICE_ACCOUNT_FILE, scopes=["https://www.googleapis.com/auth/drive.file"]
+    )
+
+    # Build the Google Drive API client
+    drive_service = build("drive", "v3", credentials=credentials)
+
+    # Upload the file to Google Drive
+    file_metadata = {
+        "name": os.path.basename(file_path),
+        "parents": [GOOGLE_DRIVE_FOLDER_ID],
+    }
+    media = MediaFileUpload(file_path, mimetype="text/csv")
+
+    try:
+        uploaded_file = drive_service.files().create(
+            body=file_metadata, media_body=media, fields="id"
+        ).execute()
+        print(f"File uploaded to Google Drive with ID: {uploaded_file['id']}")
+    except Exception as e:
+        print(f"Error uploading to Google Drive: {e}")
 
 # Main function
 if __name__ == "__main__":
@@ -67,6 +99,9 @@ if __name__ == "__main__":
     cost_data = get_aws_cost_per_service()
 
     print("Writing data to CSV...")
-    write_to_csv(cost_data)
+    file_path = write_to_csv(cost_data)
+
+    print("Uploading CSV to Google Drive...")
+    upload_to_google_drive(file_path)
 
     print("Task completed.")
