@@ -46,10 +46,9 @@ def write_to_csv(data):
     today = datetime.utcnow()
     year = today.strftime("%Y")
     month = today.strftime("%m")
-    day = today.strftime("%d")
 
     # Create directory structure
-    folder_path = os.path.join("AWS", year, month, day)
+    folder_path = os.path.join("AWS", year, month)
     os.makedirs(folder_path, exist_ok=True)
 
     # File path for the CSV file
@@ -68,6 +67,27 @@ def write_to_csv(data):
 
     return file_path
 
+# Check if folder exists in Google Drive, otherwise create it
+def check_or_create_folder(drive_service, folder_name):
+    query = f"mimeType='application/vnd.google-apps.folder' and name='{folder_name}' and '{GOOGLE_DRIVE_FOLDER_ID}' in parents"
+    results = drive_service.files().list(q=query, fields="files(id, name)").execute()
+    folders = results.get("files", [])
+
+    if not folders:
+        folder_metadata = {
+            "name": folder_name,
+            "mimeType": "application/vnd.google-apps.folder",
+            "parents": [GOOGLE_DRIVE_FOLDER_ID],
+        }
+        folder = drive_service.files().create(body=folder_metadata, fields="id").execute()
+        folder_id = folder.get("id")
+        print(f"Created folder {folder_name} with ID: {folder_id}")
+    else:
+        folder_id = folders[0]["id"]
+        print(f"Folder {folder_name} already exists with ID: {folder_id}")
+    
+    return folder_id
+
 # Upload CSV to Google Drive
 def upload_to_google_drive(file_path):
     # Authenticate with Google Drive using the service account
@@ -78,10 +98,19 @@ def upload_to_google_drive(file_path):
     # Build the Google Drive API client
     drive_service = build("drive", "v3", credentials=credentials)
 
+    # Folder structure in Google Drive (AWS/<year>/<month>)
+    file_path = file_path.replace("\\", "/")  # Convert backslashes to forward slashes for consistency
+    year = file_path.split("/")[1]
+    month = file_path.split("/")[2]
+    folder_name = f"AWS/{year}/{month}"
+
+    # Check if the folder exists or create it
+    folder_id = check_or_create_folder(drive_service, folder_name)
+
     # Upload the file to Google Drive
     file_metadata = {
         "name": os.path.basename(file_path),
-        "parents": [GOOGLE_DRIVE_FOLDER_ID],
+        "parents": [folder_id],
     }
     media = MediaFileUpload(file_path, mimetype="text/csv")
 
