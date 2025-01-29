@@ -46,7 +46,7 @@ def get_gpu_ec2_cost():
             rows.append([account, date, cost])
 
     # Save the data into a CSV file
-    filename = "aws_gpu_cost_per_account.csv"
+    filename = "aws-gpu-cost-per-account.csv"
     with open(filename, "w", newline="") as f:
         writer = csv.writer(f)
         writer.writerows(rows)
