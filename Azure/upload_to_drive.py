@@ -1,6 +1,7 @@
 import boto3
 import csv
 import os
+import glob
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
 from googleapiclient.discovery import build
@@ -40,14 +41,10 @@ def upload_to_google_drive(file_path, folder_structure):
 if __name__ == "__main__":
     # Uploading the generated CSV files to Google Drive
     today = datetime.now()
-    folder_structure = f"AWS/{today.year}/{today.month}/{today.day}"
+    folder_structure = f"Azure/{today.year}/{today.month}/{today.day}"
 
-    # List of all CSV files to upload to Google Drive
-    csv_files = [
-        "aws-cost-per-service.csv",
-        "aws-cost-per-service-per-account.csv",
-        "aws-cost-per-account.csv",
-    ]
+    # Use glob to find all .csv files in the current directory
+    csv_files = glob.glob("*.csv")
 
     # Upload each file to Google Drive
     for csv_file in csv_files:
