@@ -9,7 +9,7 @@ from dotenv import load_dotenv  # Import the dotenv module
 load_dotenv()
 
 # Load Azure Subscription IDs from .env
-AZURE_SUBSCRIPTION_IDS = os.getenv('AZURE_SUBSCRIPTION_IDS').split(',')
+AZURE_SUBSCRIPTION_IDS = os.getenv('AZURE_SUBSCRIPTION_ID').split(',')
 
 # Azure Credentials from .env
 AZURE_CLIENT_ID = os.getenv('AZURE_CLIENT_ID')
