@@ -1,75 +1,90 @@
-import os
-import datetime
-import pandas as pd
-from azure.identity import ClientSecretCredential
-from azure.mgmt.monitor import MonitorManagementClient
+import requests
+import csv
+import json
 from dotenv import load_dotenv
+import os
 
-# Load environment variables
+# Load environment variables from .env file
 load_dotenv()
 
-# Azure Credentials
-CLIENT_ID = os.getenv("AZURE_CLIENT_ID")
-CLIENT_SECRET = os.getenv("AZURE_CLIENT_SECRET")
-TENANT_ID = os.getenv("AZURE_TENANT_ID")
-SUBSCRIPTION_IDS = os.getenv("AZURE_SUBSCRIPTION_ID")
+# Azure API details (loaded from .env)
+subscription_id = os.getenv("AZURE_SUBSCRIPTION_ID")
+tenant_id = os.getenv("AZURE_TENANT_ID")
+client_id = os.getenv("AZURE_CLIENT_ID")
+client_secret = os.getenv("AZURE_CLIENT_SECRET")
 
-# Get first subscription ID from the list
-if SUBSCRIPTION_IDS:
-    SUBSCRIPTION_ID = SUBSCRIPTION_IDS.split(",")[0].strip()
+# URL to fetch usage details
+url = f"https://management.azure.com/subscriptions/{subscription_id}/providers/Microsoft.CostManagement/usageDetails?api-version=2021-10-01"
+
+# Authentication (Azure Service Principal)
+headers = {
+    "Content-Type": "application/json"
+}
+
+# Get Azure Token (Using the service principal credentials)
+auth_url = f"https://login.microsoftonline.com/{tenant_id}/oauth2/v2.0/token"
+auth_data = {
+    "grant_type": "client_credentials",
+    "client_id": client_id,
+    "client_secret": client_secret,
+    "scope": "https://management.azure.com/.default"
+}
+
+# Request access token
+auth_response = requests.post(auth_url, data=auth_data)
+auth_token = auth_response.json().get("access_token")
+
+# If no token, stop here
+if not auth_token:
+    print("Authentication failed, no access token received.")
+    exit(1)
+
+# Headers with the access token
+headers["Authorization"] = f"Bearer {auth_token}"
+
+# Payload to request usage details (without ServiceName filter)
+payload = {
+    "type": "Usage",
+    "timeframe": "LastSixMonths",  # Adjust the time frame to the last 6 months
+    "dataset": {
+        "granularity": "Monthly",
+        "aggregation": {
+            "total_usage": {
+                "name": "UsageQuantity",
+                "function": "Sum"
+            }
+        },
+        "grouping": [
+            {"type": "Dimension", "name": "Region"},
+            {"type": "Dimension", "name": "ServiceName"}
+        ]
+    }
+}
+
+# Make API Request
+response = requests.post(url, json=payload, headers=headers)
+
+# Print response status and data to check if it's empty
+print(response.status_code)  # Should print 200 if the request was successful
+response_data = response.json()  # Get the JSON response
+print(json.dumps(response_data, indent=2))  # Print the full response for inspection
+
+# Check if data exists
+if 'value' not in response_data or not response_data['value']:
+    print("No usage data returned.")
 else:
-    raise ValueError("AZURE_SUBSCRIPTION_IDS is not set or invalid in .env file")
+    # Open CSV file to write results
+    with open('tts_usage_report.csv', mode='w', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerow(["Region", "ServiceName", "Total Usage (mins)"])
+        
+        # Iterate over the results and write to CSV
+        for item in response_data['value']:
+            region = item['properties']['usageStart']
+            service_name = item['properties']['serviceName']
+            usage_quantity = item['properties']['usageQuantity']
+            
+            # Write the row to the CSV file
+            writer.writerow([region, service_name, usage_quantity])
 
-RESOURCE_GROUP = os.getenv("RESOURCE_GROUP")
-RESOURCE_NAME = os.getenv("RESOURCE_NAME")
-
-# Ensure all required values are available
-if not all([CLIENT_ID, CLIENT_SECRET, TENANT_ID, SUBSCRIPTION_ID, RESOURCE_GROUP, RESOURCE_NAME]):
-    raise ValueError("Missing required environment variables. Check your .env file.")
-
-# Construct RESOURCE_ID
-RESOURCE_ID = f"/subscriptions/{SUBSCRIPTION_ID}/resourceGroups/{RESOURCE_GROUP}/providers/Microsoft.CognitiveServices/accounts/{RESOURCE_NAME}"
-
-# Debugging
-print(f"Using Subscription ID: {SUBSCRIPTION_ID}")
-print(f"Resource Group: {RESOURCE_GROUP}")
-print(f"Resource Name: {RESOURCE_NAME}")
-print(f"Resource ID: {RESOURCE_ID}")
-
-# Authenticate with Azure
-credential = ClientSecretCredential(TENANT_ID, CLIENT_ID, CLIENT_SECRET)
-monitor_client = MonitorManagementClient(credential, SUBSCRIPTION_ID)
-
-# Metrics to fetch
-METRIC_NAME = "SynthesizedCharacters"
-MONTHS = 6  # Fetch data for the last 6 months
-
-# Get date range
-end_date = datetime.datetime.utcnow()
-start_date = end_date - datetime.timedelta(days=30 * MONTHS)
-
-# Fetch metrics
-metrics_data = monitor_client.metrics.list(
-    RESOURCE_ID,
-    timespan=f"{start_date}/{end_date}",
-    interval="P1M",  # Monthly aggregation
-    metricnames=METRIC_NAME,
-    aggregation="Total"
-)
-
-# Process results
-data = []
-for metric in metrics_data.value:
-    for timeseries in metric.timeseries:
-        for data_point in timeseries.data:
-            if data_point.total is not None:
-                data.append([data_point.time_stamp.strftime("%Y-%m"), data_point.total])
-
-# Convert to DataFrame
-df = pd.DataFrame(data, columns=["Month", "TTS Duration (Characters)"])
-
-# Save to CSV
-csv_filename = "tts_usage.csv"
-df.to_csv(csv_filename, index=False)
-
-print(f"Data successfully saved to {csv_filename}")
+    print("Data written to tts_usage_report.csv")
