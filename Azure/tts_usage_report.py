@@ -4,10 +4,10 @@ import json
 from dotenv import load_dotenv
 import os
 
-# Load environment variables from .env file
+
 load_dotenv()
 
-# Azure API details (loaded from .env)
+
 subscription_id = os.getenv("AZURE_SUBSCRIPTION_ID")
 tenant_id = os.getenv("AZURE_TENANT_ID")
 client_id = os.getenv("AZURE_CLIENT_ID")
