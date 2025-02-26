@@ -3,7 +3,7 @@ import requests
 import csv
 import time
 from datetime import datetime, timedelta, timezone
-from dotenv import load_dotenv  # Import the dotenv module
+from dotenv import load_dotenv 
 
 # Load environment variables from .env file
 load_dotenv()
