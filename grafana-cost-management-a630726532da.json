@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "grafana-cost-management",
+  "private_key_id": "a630726532dad29e66c3d148f8da976ec04a3952",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCiIKHKB6JsLPUH\nFA1UYn+Uxl8M8FYXMdLhpYNSKrQmEAkoaH6bFgWd0UD5tgp88YKPWxcBGxX7envQ\npy7AtDfs6H2kpBdm7/bm+QwXFu2JY0BluF2s8L7+I20KoRomam7WpaUGBQyVUmhB\ntIBe96iQHdhXgGduEeRA3Dfr+eBh+CERvbXfltQBCN573kgE2RAYUwjC+p+trSvo\nc+0lkiS07FevSgZbXkhtKwVqGskRfJ9qDJUA689wBLh2zluv3gB/yQnCZinY9fQX\nROdoFTGV1Gwpigs86wuWWPiKz002+ErZoV58FC4ySW9Z92u12MPzsic28I3TUnUw\n4LxghfvJAgMBAAECggEAJKKNDJLnD9ykzaGpVW0geSTOK6VPPtSCW3zEDNgbdxJe\nj2P1X+P9BulW7lZFTnBgWTZzH0vYjsfhnId6mA7hKEZsxbxSkW8d8plKMxl6OXZV\nAedEO6T284RbynAW8aFRRG2PuamAa2mAp4A7FbqOu2oTDcq1FHk0g7d/Z3JCUsCb\nzeRmLOTmU8qDSYHKKBqjOQ0Xvz1IRCTLjiZ0DxBdTre0f2nwleGkcuFOrj+PBvyP\ntGQrh8zbTKByYm78VmdxXEB1Prg1zOAkF2/G+8nA2rUfAkdK5ni52HhOBEL+C8Xv\nP5oFR6DfFLydzqsbE4WrGZYpH+XpxCX+JPiOCMFx9QKBgQDTbkl+tZnxQpuNJeHn\nFGgFsOzHY8gGdSmvsSRicfuMZv0X2CGxHIG0UEh5UTBG87eHPoYHRIrVwL2k+H0t\n3X6a97pu5YLfmaGAgEHlYu0v/RJtLw5DVCAeRAsSa6yhzleGvLmP1k+4XSRkZavl\nZGNfOPZm2j5XhX9N7ntWQBHdpwKBgQDETbmsMMNRIBU0o7S2piEVZ1eVFgWtwAYO\nuPYhhQ/sqZsuFbpoBafdjitiUqZXekdSM9wovzl0va6SakIOmFg+c4pwWgBxoAzr\nXCt4D9OnJO/PlqWp50/+xxvGrzh67F70dGyArEO/drrBFTpUKIuPyVGmbk+Lgm7D\nkS1a5vvpDwKBgQDLkMUMTVbhdgsEVDPzY69fw1/F/ekpZobzVK++ZRYXsVT/LyYJ\nO3QaIq4UuDmuJptOiMFMoA64DTHKc0E69qYeGGQUv79I/8cCTPqlG6FYceXa39Jw\nur+NxF+QpcD5rQySeoSC24m37V3LmCRv4T7YAKUkk/4wECVo6DMx8NACwwKBgHDT\nB2s7H5cp7GYzzPLJauxlWAY9AQiK/DBMCFLdqnhoRuNm45tT3NZPFwpM3IQcqI9L\ndTcKKRi6yHIolkzTLKzANYo7gFPOHH7Nm8JGvmwro5VZTV/oraaOg51fKgQkhLLV\nk2MlH08VC2NcMwkZwJTkrYQNlLRnRAgtEbdUWObrAoGAXt67SZyEtzXZXJDNltRd\naVm/1wS8K+1zydnDpd100IREtLVWbQ9K9nRFsh+QwVLWqzG4lAZ9dgCs/+SxgI6Z\nu8JywKqRslLvHXBZPeHaU+sSMFPBipovbeY0Q+iXKGUg52Wz/XSyNb2G7DzRae/I\n4+KipzZv4Hp71En1pmQYKsc=\n-----END PRIVATE KEY-----\n",
+  "client_email": "rafana-to-sheets-service@grafana-cost-management.iam.gserviceaccount.com",
+  "client_id": "103579178978963628782",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/rafana-to-sheets-service%40grafana-cost-management.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}

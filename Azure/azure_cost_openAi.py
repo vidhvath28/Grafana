@@ -14,7 +14,7 @@ AZURE_SUBSCRIPTION_IDS = os.getenv('AZURE_SUBSCRIPTION_ID').split(',')
 # Azure Credentials from .env
 AZURE_CLIENT_ID = os.getenv('AZURE_CLIENT_ID')
 AZURE_CLIENT_SECRET = os.getenv('AZURE_CLIENT_SECRET')
-AZURE_TENANT_ID = "014e9593-90f9-4b53-a505-0e1b303fd1d6"
+AZURE_TENANT_ID = os.getenv('AZURE_TENANT_ID')
 
 # Function to get the Azure access token
 def get_access_token():
